@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#9a3412">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Job Register">
+<title>Job Register</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f4ef;--card:#fff;--tx:#1f1d1a;--mut:#6b665e;--ac:#9a3412;--ac2:#fff;--bd:#ddd8cc;--rd:#dc2626}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17150f;--card:#221f17;--tx:#f1ede3;--mut:#a39d8f;--ac:#f59e0b;--ac2:#1a1200;--bd:#3a352a;--rd:#f87171}}
+:root[data-theme="dark"]{--bg:#17150f;--card:#221f17;--tx:#f1ede3;--mut:#a39d8f;--ac:#f59e0b;--ac2:#1a1200;--bd:#3a352a;--rd:#f87171}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,"Noto Sans",sans-serif;font-size:15px}
+.w{max-width:760px;margin:0 auto;padding:14px}
+h1{font-size:21px;margin:6px 0 12px}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:10px}
+.pc{cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mut{color:var(--mut);font-size:13px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+label{display:block;font-size:12px;color:var(--mut);margin-bottom:3px}
+input{width:100%;padding:9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx);font:inherit}
+button{padding:10px 14px;border:0;border-radius:8px;background:var(--ac);color:var(--ac2);font:inherit;font-weight:600;cursor:pointer}
+button.s{background:transparent;color:var(--ac);border:1px solid var(--ac)}
+button.d{background:transparent;color:var(--rd);border:1px solid var(--rd)}
+.r{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+details{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+summary{cursor:pointer;display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font-weight:600}
+.dl{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin-top:10px;font-size:14px}
+.dl span{display:block;color:var(--mut);font-size:12px}
+.sm{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px}
+.sm div{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:8px 12px}
+.sm b{display:block;font-size:17px}
+.ar{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--bd);font-size:14px}
+.sp{margin-top:14px;padding-top:12px;border-top:1px dashed var(--bd)}
+.psz{border:2px dashed var(--bd);border-radius:8px;padding:10px;text-align:center;font-size:13px;color:var(--mut);margin-top:8px;outline:none}
+.psz:focus{border-color:var(--ac)}
+h3{font-size:15px;margin:16px 0 8px}
+#sl{display:none}
+#sl h1{text-align:center;font-size:26px;margin:0}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{padding:6px;border-bottom:1px solid #999;text-align:left;font-size:13px}
+.n{text-align:right}
+.note{color:var(--mut);font-size:12px;margin-top:8px}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.65);overflow:auto;z-index:50;padding:env(safe-area-inset-top,0px) 10px 24px}
+#ov .bar{position:sticky;top:0;left:0;display:flex;gap:8px;flex-wrap:wrap;padding:10px 0;z-index:2;width:max-content;max-width:100%}
+#pp{background:#fff;color:#000;width:794px;margin:0 auto;padding:24px;box-shadow:0 2px 14px rgba(0,0,0,.4)}
+#pp .mut{color:#444}
+#pp h1{text-align:center;font-size:26px;margin:0;color:#000}
+@media print{body{background:#fff;color:#000}.np{display:none!important}#sl{display:block}th,td{color:#000}.mut{color:#444}}
+</style>
+</head>
+<body>
+<div class="w np" id="app"></div>
+<div class="w" id="sl"></div>
+<div id="ov" class="np" style="display:none"><div class="bar"><button id="cv" class="s" style="background:#fff">✕ Close</button><button id="di">Download Slip</button><button id="pn" class="s" style="background:#fff">Print</button></div><div id="pp"></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+var armed=null,SN=0,SNY={},PSN={},NP=null;
+function toast(m){var d=document.createElement("div");d.textContent=m;d.style.cssText="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:8px;z-index:99;max-width:90%;font-size:14px";document.body.appendChild(d);setTimeout(function(){d.remove()},3500)}
+window.alert=function(m){toast(m)};
+function conf(k,b){if(armed===k){armed=null;return true}armed=k;var o=b.textContent;b.textContent="Tap again to confirm";setTimeout(function(){if(armed===k){armed=null;b.textContent=o}},4000);return false}
+var K="albumJobs",KP="albumParties",KA="albumAdv",KF="albumFolders",KM="albumMobiles",KS="albumSlipFrom",KO="albumOld",KL="albumLastSlip",J=[],PL=[],A=[],F={},M={},S={},O={},L={},FM={},V="home",P="",E=null,Q="";
+function lo(k,d){try{return JSON.parse(localStorage.getItem(k)||d)}catch(e){return JSON.parse(d)}}
+function sv(){try{localStorage.setItem(K,JSON.stringify(J));localStorage.setItem(KP,JSON.stringify(PL));localStorage.setItem(KA,JSON.stringify(A));localStorage.setItem(KF,JSON.stringify(F));localStorage.setItem(KM,JSON.stringify(M));localStorage.setItem(KS,JSON.stringify(S));localStorage.setItem(KO,JSON.stringify(O));localStorage.setItem(KL,JSON.stringify(L));localStorage.setItem("albumSerialY",JSON.stringify(SNY));localStorage.setItem("albumPS",JSON.stringify(PSN))}catch(e){}}
+J=lo(K,"[]");PL=lo(KP,"[]");A=lo(KA,"[]");F=lo(KF,"{}");M=lo(KM,"{}");S=lo(KS,"{}");O=lo(KO,"{}");L=lo(KL,"{}");
+J.forEach(function(j){if(PL.indexOf(j.p)<0)PL.push(j.p)});
+function sno(j){return"#"+j.sn+"/"+String(j.yr||"").slice(2)}
+function fixSN(){J.forEach(function(j){if(j.fo===undefined)j.fo=F[j.p]||"";if(!j.yr)j.yr=(j.d||today()).slice(0,4)});try{var sy=localStorage.getItem("albumSerialY");if(sy){var st=JSON.parse(sy);for(var y in st)if(st[y]>(SNY[y]||0))SNY[y]=st[y]}else{var os=+(localStorage.getItem("albumSerial")||0),cy=today().slice(0,4);if(os>(SNY[cy]||0))SNY[cy]=os}}catch(e){}J.forEach(function(j){if(j.sn&&j.sn>(SNY[j.yr]||0))SNY[j.yr]=j.sn});J.filter(function(j){return!j.sn}).sort(function(a,b){return a.id-b.id}).forEach(function(j){SNY[j.yr]=(SNY[j.yr]||0)+1;j.sn=SNY[j.yr]});try{var pc=JSON.parse(localStorage.getItem("albumPS")||"{}");for(var q in pc)if(pc[q]>(PSN[q]||0))PSN[q]=pc[q]}catch(e){}J.forEach(function(j){if(j.ps&&j.ps>(PSN[j.p]||0))PSN[j.p]=j.ps});J.filter(function(j){return!j.ps}).sort(function(a,b){return a.id-b.id}).forEach(function(j){PSN[j.p]=(PSN[j.p]||0)+1;j.ps=PSN[j.p]})}
+fixSN();sv();
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function fd(s){if(!s)return"-";var a=s.split("-");return a[2]+"/"+a[1]+"/"+a[0]}
+function amt(j){return j.m*j.r}
+function jb(p){return J.filter(function(j){return j.p===p}).sort(function(a,b){return(a.d||"")<(b.d||"")?1:-1})}
+function ad(p){return A.filter(function(x){return x.p===p}).sort(function(a,b){return(a.d||"")<(b.d||"")?1:-1})}
+function sum(p){var L=jb(p),s={n:L.length,o:0,m:0,a:0,v:0,b:0};L.forEach(function(j){s.o+=j.o;s.m+=j.m;s.a+=amt(j)});ad(p).forEach(function(x){s.v+=x.a});s.b=s.a-s.v+(+O[p]||0);return s}
+function today(){return new Date().toISOString().slice(0,10)}
+function go(v,p){V=v;if(p!==undefined)P=p;E=null;NP=null;draw();window.scrollTo(0,0)}
+function fld(l,id,t,v,x){return'<div><label>'+l+'</label><input id="'+id+'" type="'+t+'" value="'+esc(v)+'" '+(x||"")+'></div>'}
+function $(i){return document.getElementById(i)}
+function draw(){
+var h="";
+if(V==="home"){
+h+='<h1>📖 Job Register</h1><div class="c"><div class="g">'+fld("New party name","np","text","",'placeholder="Party name"')+fld("Mobile number","nm","tel","",'placeholder="Mobile number"')+'</div><div class="r"><button id="ap">+ Add Party</button></div></div>';
+h+='<input id="q" placeholder="Search party…" value="'+esc(Q)+'"><div style="margin-top:12px">';
+var ns=PL.slice().sort().filter(function(n){return n.toLowerCase().indexOf(Q.toLowerCase())>-1});
+ns.forEach(function(n){var s=sum(n);h+='<div class="c pc" data-p="'+esc(n)+'"><div><b>'+esc(n)+'</b><div class="mut">'+(M[n]?'📞 '+esc(M[n])+' · ':'')+s.n+' jobs · '+s.m+' sheets made · Paid ₹'+s.v+'</div></div><div style="text-align:right"><b>₹'+s.b+'</b><div class="mut">Balance</div><button class="d" data-dpn="'+esc(n)+'" style="padding:3px 8px;margin-top:6px">Delete</button></div></div>'});
+if(!ns.length)h+='<div class="mut">'+(PL.length?"No party found":"No parties yet. Add your first party above.")+'</div>';
+h+='</div><div class="r" style="margin-top:20px"><button class="s" id="bk">Backup</button><button class="s" id="rs">Restore from backup</button></div><div id="bx" style="margin-top:10px"></div><div class="note">Data is saved in this browser only. Take a backup regularly.</div>';
+}else if(V==="party"){
+var L=jb(P),s=sum(P),X=ad(P);
+var j=E?J.filter(function(x){return x.id===E})[0]:{p:P,d:today(),o:"",m:"",r:"",pf:"",f:""};
+h+='<div class="r" style="margin:0 0 10px"><button class="s" id="bh">← Back</button><button id="nj">+ New Job</button><button id="na">+ Payment</button><button id="vs">View Slip</button><button id="dg">Download Slip</button><button class="s" id="pr">Print Slip</button></div><h1>'+esc(P)+'</h1>';
+h+='<div class="g" style="margin-bottom:10px">'+fld("📞 Mobile number","mn","tel",M[P]||"",'placeholder="Mobile number"')+fld("Slip from date (auto: day after your last downloaded slip)","sf","date",S[P]||L[P]||"")+'</div><div class="r" style="margin:-2px 0 12px"><button class="s" id="ef">Save details</button><button class="s" id="sc">Reset slip date</button></div>';
+h+='<div class="sm"><div><span class="mut">Jobs</span><b>'+s.n+'</b></div><div><span class="mut">Sheets made</span><b>'+s.m+'</b></div><div><span class="mut">Total</span><b>₹'+s.a+'</b></div><div><span class="mut">Paid</span><b>₹'+s.v+'</b></div><div><span class="mut">Balance</span><b>₹'+s.b+'</b></div></div>';
+h+='<div class="c" id="jf"><h3 style="margin-top:0">'+(E?"Edit Job":"+ New Job Entry")+'</h3><div class="g">'+fld("Job date","d","date",j.d)+fld("📁 Folder name","fo","text",j.fo||"",'placeholder="Folder name"')+'<div style="grid-column:1/-1"><label>📄 PF (PDF) – browse or paste</label><input type="file" accept="application/pdf,.pdf" class="pff" data-id="new"><div class="psz" tabindex="0" data-id="new">Or click here and press Ctrl+V to paste a copied PDF</div><div class="mut" style="margin-top:6px">PF name: <b id="pnnew">'+esc(j.pfn||"none")+'</b></div></div>'+fld("Sheets ordered","o","number",j.o)+fld("Sheets made","m","number",j.m)+fld("Rate per sheet (₹)","rt","number",j.r)+fld("PF date","pf","date",j.pf)+fld("Final date","f","date",j.f)+'</div><div class="r"><button id="sj">Save</button>'+(E?'<button class="s" id="cn">Cancel</button>':'')+'</div></div><h3>Jobs</h3><div class="r" style="margin:0 0 8px"><span class="mut">Tick the jobs to show on the slip</span><button class="s" id="sla" style="padding:4px 10px">Select all</button><button class="s" id="slc" style="padding:4px 10px">Clear all</button></div>';
+L.forEach(function(j){h+='<details><summary><span><input type="checkbox" class="sk" data-id="'+j.id+'" '+(j.sl!==false?'checked':'')+' style="width:auto;margin-right:6px">'+sno(j)+' (Party #'+j.ps+') · '+fd(j.d)+(j.fo?' · 📁 '+esc(j.fo):'')+'</span><span>'+j.m+' sheets · Total ₹'+amt(j)+'</span></summary><div class="dl"><div><span>Job no.</span>'+sno(j)+'</div><div><span>Party job no.</span>#'+j.ps+'</div><div><span>Job date</span>'+fd(j.d)+'</div><div><span>Folder</span>'+(j.fo?esc(j.fo):"-")+'</div><div><span>PF name</span>'+(j.pfn?esc(j.pfn):"-")+'</div><div><span>Sheets ordered</span>'+j.o+'</div><div><span>Sheets made</span>'+j.m+'</div><div><span>Rate per sheet</span>₹'+j.r+'</div><div><span>Total</span>₹'+amt(j)+'</div><div><span>PF date</span>'+fd(j.pf)+'</div><div><span>Final date</span>'+fd(j.f)+'</div></div><div class="r"><button class="s" data-e="'+j.id+'">Edit</button><button class="d" data-x="'+j.id+'">Delete</button></div>'+
+'<div class="sp"><b>Send PF</b><div class="r" style="margin-top:8px"><input type="file" accept="application/pdf,.pdf" class="pff" data-id="'+j.id+'"></div><div class="psz" tabindex="0" data-id="'+j.id+'">Or click here and press Ctrl+V to paste a copied PDF</div><div class="mut" style="margin-top:6px">Selected: <span id="nm'+j.id+'">'+(FM[j.id]?esc(FM[j.id].name):"none")+'</span></div><div class="r"><button data-sp="'+j.id+'">Send on WhatsApp</button></div></div></details>'});
+if(!L.length)h+='<div class="mut">No jobs yet. Add the first job using the form above.</div>';
+h+='<h3 id="pf">Payments</h3><div class="c">';
+X.forEach(function(x){h+='<div class="ar"><span>'+fd(x.d)+(x.t?' · '+esc(x.t):'')+'</span><span><b>₹'+x.a+'</b> <button class="d" data-xa="'+x.id+'" style="padding:3px 8px">✕</button></span></div>'});
+if(!X.length)h+='<div class="mut">No payments</div>';
+h+='<div class="g" style="margin-top:12px">'+fld("Date","pd","date",today())+fld("Payment received (₹)","pa","number","",'inputmode="numeric"')+fld("Note (optional)","pt","text","")+'</div><div class="r"><button id="ps">Add Payment</button></div><div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--bd)"><b>Old balance (previous amount due)</b><div class="g" style="margin-top:8px">'+fld("Old balance (₹)","ob","number",O[P]||"",'inputmode="numeric"')+'</div><div class="note">This amount is added to "Previous balance" on the slip.</div><div class="r"><button class="s" id="so">Save old balance</button></div></div>';
+h+='</div><div class="r" style="margin-top:20px"><button class="d" id="dp">Delete this party</button></div>';
+}else{
+h+='<h1>Payment — '+esc(P)+'</h1><div class="c"><div class="g">'+fld("Date","ad","date",today())+fld("Payment received (₹)","aa","number","")+fld("Note (optional)","at","text","")+'</div><div class="r"><button id="sa">Save</button><button class="s" id="cn">Cancel</button></div></div>';
+}
+$("app").innerHTML=h;slip();
+}
+function sd(p){var f=S[p]||L[p]||"",r={f:f,pj:0,pp:0,L:[],X:[],tj:0,tm:0,to:0,tp:0};
+jb(p).forEach(function(j){if(f&&j.d&&j.d<f)r.pj+=amt(j);else if(j.sl!==false)r.L.push(j)});
+ad(p).forEach(function(x){if(f&&x.d&&x.d<f)r.pp+=x.a;else r.X.push(x)});
+r.L.reverse();r.X.reverse();r.prev=r.pj-r.pp+(+O[p]||0);
+r.L.forEach(function(j){r.tj+=amt(j);r.tm+=j.m;r.to+=j.o});r.X.forEach(function(x){r.tp+=x.a});
+r.due=r.prev+r.tj-r.tp;return r}
+function slip(){var d=sd(P);
+var h='<h1>Album Create</h1><div style="text-align:center" class="mut">Job Slip</div><div style="margin-top:12px"><b style="font-size:17px">Party: '+esc(P)+'</b><span class="mut" style="float:right">'+fd(today())+'</span>'+(M[P]?'<div class="mut">📞 '+esc(M[P])+'</div>':'')+(d.f?'<div class="mut">Jobs from '+fd(d.f)+'</div>':'')+'</div><table><tr><th>Job</th><th>Party job</th><th>Job date</th><th>Folder</th><th>PF name</th><th class="n">Ordered</th><th class="n">Made</th><th class="n">Rate</th><th class="n">Total</th><th>Final</th></tr>';
+d.L.forEach(function(j,i){h+='<tr><td>'+sno(j)+'</td><td>#'+j.ps+'</td><td>'+fd(j.d)+'</td><td>'+esc(j.fo||"")+'</td><td>'+esc(j.pfn||"")+'</td><td class="n">'+j.o+'</td><td class="n">'+j.m+'</td><td class="n">₹'+j.r+'</td><td class="n">₹'+amt(j)+'</td><td>'+fd(j.f)+'</td></tr>'});
+h+='<tr><th colspan="5">Total ('+d.L.length+' jobs)</th><th class="n">'+d.to+'</th><th class="n">'+d.tm+'</th><th></th><th class="n">₹'+d.tj+'</th><th></th></tr></table>';
+if(d.X.length){h+='<table><tr><th>Payment date</th><th>Note</th><th class="n">Received</th></tr>';d.X.forEach(function(x){h+='<tr><td>'+fd(x.d)+'</td><td>'+esc(x.t||"")+'</td><td class="n">₹'+x.a+'</td></tr>'});h+='<tr><th colspan="2">Total received this time</th><th class="n">₹'+d.tp+'</th></tr></table>'}
+h+='<table><tr><th>Previous balance (old amount)</th><th class="n">₹'+d.prev+'</th></tr><tr><th>Jobs total (this slip)</th><th class="n">₹'+d.tj+'</th></tr><tr><th>Less payment received this time</th><th class="n">− ₹'+d.tp+'</th></tr><tr><th style="font-size:16px">Balance due</th><th class="n" style="font-size:16px">₹'+d.due+'</th></tr></table>';
+$("sl").innerHTML=h;
+}
+function delParty(n){J.filter(function(j){return j.p===n}).forEach(function(j){delete FM[j.id]});J=J.filter(function(x){return x.p!==n});A=A.filter(function(x){return x.p!==n});PL=PL.filter(function(x){return x!==n});delete F[n];delete M[n];delete S[n];delete O[n];delete L[n];delete PSN[n];sv()}
+function nd(){var d=new Date(today()+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+1);return d.toISOString().slice(0,10)}
+function isNative(){return !!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform())}
+function b2b64(blob){return new Promise(function(r){var f=new FileReader();f.onload=function(){r(String(f.result).split(",")[1])};f.readAsDataURL(blob)})}
+async function nativeShare(blob,name,text){var Fs=Capacitor.Plugins.Filesystem,Sh=Capacitor.Plugins.Share;var w=await Fs.writeFile({path:name,data:await b2b64(blob),directory:"CACHE"});await Sh.share({title:name,text:text||"",files:[w.uri],dialogTitle:"Send / save"})}
+var hinted=false;
+function doPrint(){try{window.print()}catch(e){}if(!hinted){hinted=true;setTimeout(function(){toast("If no print window opened, printing is blocked in this viewer. Use Download Slip instead.")},700)}}
+function showSlip(){slip();$("pp").innerHTML=$("sl").innerHTML;$("ov").style.display="block";$("ov").scrollTop=0}
+function dlImg(){showSlip();setTimeout(capture,250)}
+async function capture(){var dw=null;try{dw=await claude.use("downloads")}catch(e){}
+if(!window.html2canvas){alert("Download needs an internet connection the first time. Or take a screenshot of the slip.");return}
+var fn="Slip-"+P.replace(/[^\w\- ]+/g,"").trim()+"-"+today()+".png";
+try{var c=await html2canvas($("pp"),{scale:2,backgroundColor:"#ffffff"});var b=await new Promise(function(r){c.toBlob(r,"image/png")});
+if(isNative()){await nativeShare(b,fn,"")}else if(dw){await dw.save({filename:fn,data:b})}else{var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=fn;document.body.appendChild(a);a.click();a.remove()}
+L[P]=nd();S[P]="";sv();draw();toast("Slip saved. Next slip will start from "+fd(L[P]))}catch(e){if(!e||e.code!=="declined")alert("Could not save the slip image.")}}
+async function dlSlip(){
+var dw=null;try{dw=await claude.use("downloads")}catch(e){}
+if(!dw||!window.jspdf){alert("Download is not available here. Use Print Slip and choose Save as PDF.");return}
+var d=sd(P),doc=new window.jspdf.jsPDF({unit:"mm",format:"a4"}),y=16;
+function T(t,x,yy,o){doc.text(String(t),x,yy,o)}
+function B(b){doc.setFont("helvetica",b?"bold":"normal")}
+function chk(){if(y>275){doc.addPage();y=16}}
+function row(a,b){B(b);T(a[0],14,y);T(a[1],25,y);T(String(a[2]).substring(0,11),46,y);T(String(a[3]).substring(0,18),66,y);T(a[4],114,y,{align:"right"});T(a[5],130,y,{align:"right"});T(a[6],152,y,{align:"right"});T(a[7],174,y,{align:"right"});T(a[8],196,y,{align:"right"});y+=6;doc.line(14,y-4.2,196,y-4.2);chk()}
+function ln(l,v,b){B(b);T(l,14,y);T(v,196,y,{align:"right"});y+=6.5;chk()}
+B(1);doc.setFontSize(20);T("Album Create",105,y,{align:"center"});y+=7;
+B(0);doc.setFontSize(10);T("Job Slip",105,y,{align:"center"});y+=10;
+B(1);doc.setFontSize(12);T("Party: "+P,14,y);B(0);doc.setFontSize(10);T(fd(today()),196,y,{align:"right"});y+=6;
+if(M[P]){T("Mobile: "+M[P],14,y);y+=5}
+
+if(d.f){T("Jobs from "+fd(d.f),14,y);y+=5}
+y+=3;
+row(["Job","Job date","Folder","PF name","Ordered","Made","Rate","Total","Final"],1);
+d.L.forEach(function(j,i){row([sno(j),fd(j.d),j.fo||"",j.pfn||"",j.o,j.m,"Rs."+j.r,"Rs."+amt(j),fd(j.f)])});
+row(["","Total ("+d.L.length+" jobs)","","",d.to,d.tm,"","Rs."+d.tj,""],1);
+if(d.X.length){y+=5;B(1);T("Payments received",14,y);y+=6;d.X.forEach(function(x){ln(fd(x.d)+(x.t?"   "+x.t:""),"Rs."+x.a,0)});ln("Total received this time","Rs."+d.tp,1)}
+y+=5;chk();
+ln("Previous balance (old amount)","Rs."+d.prev,0);
+ln("Jobs total (this slip)","Rs."+d.tj,0);
+ln("Less payment received this time","- Rs."+d.tp,0);
+doc.setFontSize(12);ln("Balance due","Rs."+d.due,1);
+try{await dw.save({filename:"Slip-"+P.replace(/[^\w\- ]+/g,"").trim()+"-"+today()+".pdf",data:doc.output("blob")})}catch(e){if(!e||e.code!=="declined")alert("Could not save the file. Use Print Slip and choose Save as PDF.")}
+}
+function saveJob(){var o0=E?J.filter(function(x){return x.id===E})[0]:null;var yr0=o0?(o0.yr||(o0.d||today()).slice(0,4)):(($("d").value||today()).slice(0,4));if(!o0)SNY[yr0]=(SNY[yr0]||0)+1;var j={id:E||Date.now(),sn:o0?o0.sn:SNY[yr0],yr:yr0,ps:o0?o0.ps:(PSN[P]=(PSN[P]||0)+1),fo:$("fo").value.trim(),pfn:NP?NP.name:((o0&&o0.pfn)||""),p:P,d:$("d").value,o:+$("o").value||0,m:+$("m").value||0,r:+$("rt").value||0,pf:$("pf").value,f:$("f").value};
+if(E)J=J.map(function(x){return x.id===E?j:x});else J.push(j);if(NP){FM[j.id]=NP;NP=null}sv()}
+function addParty(){var n=$("np").value.trim();if(!n){alert("Enter the party name");return}
+if(PL.indexOf(n)>-1){alert("This party already exists");return}PL.push(n);M[n]=$("nm").value.trim();sv();go("party",n)}
+function setF(id,f){if(!f)return;if(f.type!=="application/pdf"&&!/\.pdf$/i.test(f.name)){alert("Only PDF files are allowed");return}if(id==="new"){NP=f;var q=$("pnnew");if(q)q.textContent=f.name;return}FM[id]=f;var jj=J.filter(function(x){return String(x.id)===String(id)})[0];if(jj){jj.pfn=f.name;sv()}var e=$("nm"+id);if(e)e.textContent=f.name}
+async function sendPF(id){
+var f=FM[id],j=J.filter(function(x){return String(x.id)===String(id)})[0];
+if(!f){alert("Browse or paste a PDF first");return}
+var m=(M[P]||"").replace(/\D/g,"");
+if(!m){alert("Add this party's mobile number first (above) and tap Save details");return}
+if(m.length===10)m="91"+m;
+var txt="Album Create – PF for "+P+" (job dated "+fd(j.d)+")";
+if(isNative()){try{await nativeShare(f,f.name,txt)}catch(e){}return}
+try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:txt});return}}catch(e){if(e&&e.name==="AbortError")return}
+window.open("https://wa.me/"+m+"?text="+encodeURIComponent(txt),"_blank");
+alert("WhatsApp chat opened for this number. Please attach the PDF there (paperclip icon) and send.");
+}
+document.addEventListener("click",function(e){
+var t=e.target,id=t.id,g=function(a){return t.getAttribute&&t.getAttribute(a)};
+if(g("data-dpn")){var pn=g("data-dpn");if(conf("p"+pn,t)){delParty(pn);draw()}return}
+if(g("data-sp")){sendPF(g("data-sp"));return}
+if(g("data-xa")){if(conf("a"+g("data-xa"),t)){var q=+g("data-xa");A=A.filter(function(x){return x.id!==q});sv();draw()}return}
+if(g("data-x")){if(conf("j"+g("data-x"),t)){var d=+g("data-x");J=J.filter(function(x){return x.id!==d});delete FM[d];sv();draw()}return}
+if(g("data-e")){E=+g("data-e");NP=null;draw();window.scrollTo(0,0);return}
+if(id==="ap")addParty();
+else if(id==="ef"){M[P]=$("mn").value.trim();S[P]=($("sf").value===(L[P]||""))?"":$("sf").value;sv();draw()}
+else if(id==="dp"){if(conf("dp",t)){delParty(P);go("home","")}}
+else if(id==="nj"){if(E){E=null;draw()}$("jf").scrollIntoView({behavior:"smooth"});var fe=$("o");if(fe)fe.focus()}
+else if(id==="sc"){S[P]="";L[P]="";sv();draw();toast("Reset. All jobs will show on the slip.")}
+else if(id==="so"){O[P]=+$("ob").value||0;sv();draw();toast("Old balance saved: ₹"+O[P])}
+else if(id==="sla"||id==="slc"){jb(P).forEach(function(j){j.sl=(id==="sla")});sv();draw()}
+else if(id==="ps"){var pa=+$("pa").value;if(!pa){alert("Enter the payment amount");return}A.push({id:Date.now(),p:P,d:$("pd").value||today(),a:pa,t:$("pt").value.trim()});sv();draw();$("pf").scrollIntoView();toast("Payment added: ₹"+pa)}
+else if(id==="na"){$("pf").scrollIntoView({behavior:"smooth"});var pe=$("pa");if(pe)pe.focus()}
+else if(id==="bh")go("home");
+else if(id==="cn")go("party");
+else if(id==="pr"||id==="pn")doPrint();
+else if(id==="vs")showSlip();
+else if(id==="dg")dlImg();
+else if(id==="di")capture();
+else if(id==="cv")$("ov").style.display="none";
+else if(id==="sj"){saveJob();go("party")}
+else if(id==="sa"){var a=+$("aa").value;if(!a){alert("Enter the amount");return}A.push({id:Date.now(),p:P,d:$("ad").value,a:a,t:$("at").value.trim()});sv();go("party")}
+else if(id==="bk"){$("bx").innerHTML='<textarea id="bt" rows="6" style="width:100%" readonly>'+esc(JSON.stringify({j:J,p:PL,a:A,f:F,m:M,s:S,o:O,l:L}))+'</textarea><div class="note">Copy all this text and keep it safe.</div>';$("bt").select()}
+else if(id==="rs"){$("bx").innerHTML='<textarea id="bt" rows="6" style="width:100%" placeholder="Paste backup text here"></textarea><div class="r"><button id="rn">Restore now</button></div>'}
+else if(id==="rn"){var s=$("bt").value;if(s){try{var o=JSON.parse(s);if(Array.isArray(o)){J=o;PL=[]}else{J=o.j||[];PL=o.p||[];A=o.a||[];F=o.f||{};M=o.m||{};S=o.s||{};O=o.o||{};L=o.l||{}}J.forEach(function(j){if(PL.indexOf(j.p)<0)PL.push(j.p)});fixSN();sv();go("home")}catch(x){alert("Invalid backup")}}}
+else{var c=t.closest&&t.closest("[data-p]");if(c&&V==="home")go("party",c.getAttribute("data-p"))}
+});
+document.addEventListener("change",function(e){var t=e.target;
+if(t.classList&&t.classList.contains("pff"))setF(t.getAttribute("data-id"),t.files[0]);
+if(t.id==="fn"){F[P]=t.value.trim();sv()}
+if(t.id==="mn"){M[P]=t.value.trim();sv()}
+if(t.id==="sf"){S[P]=(t.value===(L[P]||""))?"":t.value;sv()}
+if(t.classList&&t.classList.contains("sk")){var jj2=J.filter(function(x){return String(x.id)===t.getAttribute("data-id")})[0];if(jj2){jj2.sl=t.checked;sv();slip()}}});
+document.addEventListener("paste",function(e){var z=e.target.closest&&e.target.closest(".psz");if(!z)return;
+var fs=e.clipboardData&&e.clipboardData.files;if(fs&&fs.length){e.preventDefault();setF(z.getAttribute("data-id"),fs[0])}else alert("No file found in the clipboard. Copy a PDF file first.")});
+document.addEventListener("input",function(e){if(e.target.id==="q"){Q=e.target.value;var p=e.target.selectionStart;draw();var q=$("q");q.focus();q.setSelectionRange(p,p)}});
+document.addEventListener("keydown",function(e){if(e.key==="Enter"&&(e.target.id==="np"||e.target.id==="nm"))addParty()});
+draw();
+</script>
+</body>
+</html>
