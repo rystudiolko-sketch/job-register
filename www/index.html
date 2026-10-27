@@ -59,49 +59,44 @@ th,td{padding:6px;border-bottom:1px solid #999;text-align:left;font-size:13px}
 <div id="ov" class="np" style="display:none"><div class="bar"><button id="cv" class="s" style="background:#fff">✕ Close</button><button id="di">Download Slip</button><button id="pn" class="s" style="background:#fff">Print</button></div><div id="pp"></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-app-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/firebase@10.12.2/firebase-firestore-compat.js"></script>
 <script>
 var armed=null,SN=0,SNY={},PSN={},NP=null;
 function toast(m){var d=document.createElement("div");d.textContent=m;d.style.cssText="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:8px;z-index:99;max-width:90%;font-size:14px";document.body.appendChild(d);setTimeout(function(){d.remove()},3500)}
 window.alert=function(m){toast(m)};
 function conf(k,b){if(armed===k){armed=null;return true}armed=k;var o=b.textContent;b.textContent="Tap again to confirm";setTimeout(function(){if(armed===k){armed=null;b.textContent=o}},4000);return false}
-var K="albumJobs",KP="albumParties",KA="albumAdv",KF="albumFolders",KM="albumMobiles",KS="albumSlipFrom",KO="albumOld",KL="albumLastSlip",J=[],PL=[],A=[],F={},M={},S={},O={},L={},FM={},V="home",P="",E=null,Q="";
+var K="albumJobs",KP="albumParties",KA="albumAdv",KF="albumFolders",KM="albumMobiles",KS="albumSlipFrom",KO="albumOld",KL="albumLastSlip",J=[],PL=[],A=[],F={},M={},S={},O={},L={},JO={},FM={},V="home",P="",E=null,Q="";
 function lo(k,d){try{return JSON.parse(localStorage.getItem(k)||d)}catch(e){return JSON.parse(d)}}
-function saveLocal(){try{localStorage.setItem(K,JSON.stringify(J));localStorage.setItem(KP,JSON.stringify(PL));localStorage.setItem(KA,JSON.stringify(A));localStorage.setItem(KF,JSON.stringify(F));localStorage.setItem(KM,JSON.stringify(M));localStorage.setItem(KS,JSON.stringify(S));localStorage.setItem(KO,JSON.stringify(O));localStorage.setItem(KL,JSON.stringify(L));localStorage.setItem("albumSerialY",JSON.stringify(SNY));localStorage.setItem("albumPS",JSON.stringify(PSN))}catch(e){}}
+function saveLocal(){try{localStorage.setItem(K,JSON.stringify(J));localStorage.setItem(KP,JSON.stringify(PL));localStorage.setItem(KA,JSON.stringify(A));localStorage.setItem(KF,JSON.stringify(F));localStorage.setItem(KM,JSON.stringify(M));localStorage.setItem(KS,JSON.stringify(S));localStorage.setItem(KO,JSON.stringify(O));localStorage.setItem(KL,JSON.stringify(L));localStorage.setItem("albumJobsOnly",JSON.stringify(JO));localStorage.setItem("albumSerialY",JSON.stringify(SNY));localStorage.setItem("albumPS",JSON.stringify(PSN))}catch(e){}}
 function sv(){try{localStorage.setItem("albumDirty","1")}catch(e){}saveLocal();cloudPush()}
-J=lo(K,"[]");PL=lo(KP,"[]");A=lo(KA,"[]");F=lo(KF,"{}");M=lo(KM,"{}");S=lo(KS,"{}");O=lo(KO,"{}");L=lo(KL,"{}");
+J=lo(K,"[]");PL=lo(KP,"[]");A=lo(KA,"[]");F=lo(KF,"{}");M=lo(KM,"{}");S=lo(KS,"{}");O=lo(KO,"{}");L=lo(KL,"{}");JO=lo("albumJobsOnly","{}");
 J.forEach(function(j){if(PL.indexOf(j.p)<0)PL.push(j.p)});
 function sno(j){return"#"+j.sn+"/"+String(j.yr||"").slice(2)}
 function fixSN(){J.forEach(function(j){if(j.fo===undefined)j.fo=F[j.p]||"";if(!j.yr)j.yr=(j.d||today()).slice(0,4)});try{var sy=localStorage.getItem("albumSerialY");if(sy){var st=JSON.parse(sy);for(var y in st)if(st[y]>(SNY[y]||0))SNY[y]=st[y]}else{var os=+(localStorage.getItem("albumSerial")||0),cy=today().slice(0,4);if(os>(SNY[cy]||0))SNY[cy]=os}}catch(e){}J.forEach(function(j){if(j.sn&&j.sn>(SNY[j.yr]||0))SNY[j.yr]=j.sn});J.filter(function(j){return!j.sn}).sort(function(a,b){return a.id-b.id}).forEach(function(j){SNY[j.yr]=(SNY[j.yr]||0)+1;j.sn=SNY[j.yr]});try{var pc=JSON.parse(localStorage.getItem("albumPS")||"{}");for(var q in pc)if(pc[q]>(PSN[q]||0))PSN[q]=pc[q]}catch(e){}J.forEach(function(j){if(j.ps&&j.ps>(PSN[j.p]||0))PSN[j.p]=j.ps});J.filter(function(j){return!j.ps}).sort(function(a,b){return a.id-b.id}).forEach(function(j){PSN[j.p]=(PSN[j.p]||0)+1;j.ps=PSN[j.p]})}
 fixSN();saveLocal();
 
 /* ===== CLOUD SYNC (Firebase) — paste your keys below ===== */
-var FB_CFG={
-  apiKey:"AIzaSyBa2ztWnr4yNOCfOKKY3922kCXeFRVTJo8",
-  authDomain:"job-register-95f74.firebaseapp.com",
-  projectId:"job-register-95f74",
-  appId:"1:896307445969:web:f7c4696db7b37d716085f0"
-};
-var CL={on:!!(FB_CFG.apiKey&&window.firebase),user:null,db:null,t:null,ts:0,applying:false,st:"Connecting…",unsub:null};
+var FB_CFG={apiKey:"",authDomain:"",projectId:"",appId:""};
+var CL={on:!!(FB_CFG.apiKey&&window.firebase),user:null,db:null,t:null,ts:0,id:Math.random().toString(36).slice(2)+Date.now(),applying:false,st:"Connecting…",unsub:null};
 function setStatus(m){CL.st=m;var e=document.getElementById("cst");if(e)e.textContent=m}
-function pack(){return JSON.stringify({j:J,p:PL,a:A,f:F,m:M,s:S,o:O,l:L,psn:PSN,sny:SNY})}
+function pack(){return JSON.stringify({j:J,p:PL,a:A,f:F,m:M,s:S,o:O,l:L,jo:JO,psn:PSN,sny:SNY})}
 function unpack(b){try{var o=JSON.parse(b);CL.applying=true;try{if(!localStorage.getItem("albumBeforeSync"))localStorage.setItem("albumBeforeSync",pack())}catch(e){}
-J=o.j||[];PL=o.p||[];A=o.a||[];F=o.f||{};M=o.m||{};S=o.s||{};O=o.o||{};L=o.l||{};PSN=o.psn||{};SNY=o.sny||{};
+J=o.j||[];PL=o.p||[];A=o.a||[];F=o.f||{};M=o.m||{};S=o.s||{};O=o.o||{};L=o.l||{};JO=o.jo||{};PSN=o.psn||{};SNY=o.sny||{};
 J.forEach(function(j){if(PL.indexOf(j.p)<0)PL.push(j.p)});fixSN();saveLocal();CL.applying=false;
 var ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))draw()}catch(e){CL.applying=false}}
 function cloudRef(){return CL.db.collection("users").doc(CL.user.uid).collection("data").doc("main")}
 function cloudInit(){if(!CL.on)return;try{firebase.initializeApp(FB_CFG);CL.db=firebase.firestore();
-firebase.auth().onAuthStateChanged(function(u){CL.user=u;if(u)cloudStart();else if(CL.unsub){CL.unsub();CL.unsub=null}draw()})}catch(e){CL.on=false;CL.st="Firebase initialization failed";console.error("Firebase initialization failed:",e)}}
+firebase.auth().onAuthStateChanged(function(u){CL.user=u;if(u)cloudStart();else if(CL.unsub){CL.unsub();CL.unsub=null}draw()})}catch(e){CL.on=false}}
 function cloudStart(){var first=true;if(CL.unsub)CL.unsub();
 CL.unsub=cloudRef().onSnapshot(function(s){if(s.metadata.hasPendingWrites)return;
 var dirty=false;try{dirty=localStorage.getItem("albumDirty")==="1"}catch(e){}
 if(first&&dirty){first=false;cloudPush(true);return}
-if(s.exists){var d=s.data();if((d.ts||0)>CL.ts){CL.ts=d.ts;unpack(d.body)}}else if(first&&(J.length||PL.length)){first=false;cloudPush(true);return}
+if(s.exists){var d=s.data();if(d.by!==CL.id){CL.ts=d.ts||0;unpack(d.body)}}else if(first&&(J.length||PL.length)){first=false;cloudPush(true);return}
 first=false;setStatus("Synced")},function(){setStatus("Sync error")})}
 function cloudPush(){if(!CL||!CL.on||!CL.user||CL.applying)return;clearTimeout(CL.t);setStatus("Saving…");
-CL.t=setTimeout(function(){var ts=Date.now();CL.ts=ts;cloudRef().set({body:pack(),ts:ts}).then(function(){try{localStorage.removeItem("albumDirty")}catch(e){}setStatus("Synced")}).catch(function(){setStatus("Offline – will sync later")})},600)}
+CL.t=setTimeout(function(){var ts=Date.now();CL.ts=ts;cloudRef().set({body:pack(),ts:ts,by:CL.id}).then(function(){try{localStorage.removeItem("albumDirty")}catch(e){}setStatus("Synced")}).catch(function(){setStatus("Offline – will sync later")})},600)}
 function doAuth(create){var em=$("em").value.trim(),pw=$("pw").value;if(!em||!pw){alert("Enter email and password");return}
 var a=firebase.auth();(create?a.createUserWithEmailAndPassword(em,pw):a.signInWithEmailAndPassword(em,pw)).catch(function(e){alert(e.message)})}
 function cbar(){return CL.on&&CL.user?'<div class="mut" style="margin:-6px 0 10px">☁ <span id="cst">'+esc(CL.st)+'</span> · '+esc(CL.user.email)+' <button class="s" id="so2" style="padding:2px 8px">Sign out</button></div>':(CL.on?'':'<div class="mut" style="margin:-6px 0 10px">Cloud sync is off (data stays on this device)</div>')}
@@ -132,7 +127,7 @@ var j=E?J.filter(function(x){return x.id===E})[0]:{p:P,d:today(),o:"",m:"",r:"",
 h+='<div class="r" style="margin:0 0 10px"><button class="s" id="bh">← Back</button><button id="nj">+ New Job</button><button id="na">+ Payment</button><button id="vs">View Slip</button><button id="dg">Download Slip</button><button class="s" id="pr">Print Slip</button></div><h1>'+esc(P)+'</h1>';
 h+='<div class="g" style="margin-bottom:10px">'+fld("📞 Mobile number","mn","tel",M[P]||"",'placeholder="Mobile number"')+fld("Slip from date (auto: day after your last downloaded slip)","sf","date",S[P]||L[P]||"")+'</div><div class="r" style="margin:-2px 0 12px"><button class="s" id="ef">Save details</button><button class="s" id="sc">Reset slip date</button></div>';
 h+='<div class="sm"><div><span class="mut">Jobs</span><b>'+s.n+'</b></div><div><span class="mut">Sheets made</span><b>'+s.m+'</b></div><div><span class="mut">Total</span><b>₹'+s.a+'</b></div><div><span class="mut">Paid</span><b>₹'+s.v+'</b></div><div><span class="mut">Balance</span><b>₹'+s.b+'</b></div></div>';
-h+='<div class="c" id="jf"><h3 style="margin-top:0">'+(E?"Edit Job":"+ New Job Entry")+'</h3><div class="g">'+fld("Job date","d","date",j.d)+fld("📁 Folder name","fo","text",j.fo||"",'placeholder="Folder name"')+'<div style="grid-column:1/-1"><label>📄 PF (PDF) – browse or paste</label><input type="file" accept="application/pdf,.pdf" class="pff" data-id="new"><div class="psz" tabindex="0" data-id="new">Or click here and press Ctrl+V to paste a copied PDF</div><div class="mut" style="margin-top:6px">PF name: <b id="pnnew">'+esc(j.pfn||"none")+'</b></div></div>'+fld("Sheets ordered","o","number",j.o)+fld("Sheets made","m","number",j.m)+fld("Rate per sheet (₹)","rt","number",j.r)+fld("PF date","pf","date",j.pf)+fld("Final date","f","date",j.f)+'</div><div class="r"><button id="sj">Save</button>'+(E?'<button class="s" id="cn">Cancel</button>':'')+'</div></div><h3>Jobs</h3><div class="r" style="margin:0 0 8px"><span class="mut">Tick the jobs to show on the slip</span><button class="s" id="sla" style="padding:4px 10px">Select all</button><button class="s" id="slc" style="padding:4px 10px">Clear all</button></div>';
+h+='<div class="c" id="jf"><h3 style="margin-top:0">'+(E?"Edit Job":"+ New Job Entry")+'</h3><div class="g">'+fld("Job date","d","date",j.d)+fld("📁 Folder name","fo","text",j.fo||"",'placeholder="Folder name"')+'<div style="grid-column:1/-1"><label>📄 PF (PDF) – browse or paste</label><input type="file" accept="application/pdf,.pdf" class="pff" data-id="new"><div class="psz" tabindex="0" data-id="new">Or click here and press Ctrl+V to paste a copied PDF</div><div class="mut" style="margin-top:6px">PF name: <b id="pnnew">'+esc(j.pfn||"none")+'</b></div></div>'+fld("Sheets ordered","o","number",j.o)+fld("Sheets made","m","number",j.m)+fld("Rate per sheet (₹)","rt","number",j.r)+fld("PF date","pf","date",j.pf)+fld("Final date","f","date",j.f)+'</div><div class="r"><button id="sj">Save</button>'+(E?'<button class="s" id="cn">Cancel</button>':'')+'</div></div><h3>Jobs</h3><div class="r" style="margin:0 0 8px"><span class="mut">Tick the jobs to show on the slip</span><button class="s" id="sla" style="padding:4px 10px">Select all</button><button class="s" id="slc" style="padding:4px 10px">Clear all</button></div><label style="display:flex;gap:8px;align-items:center;margin:0 0 10px;font-size:13px;color:var(--mut)"><input type="checkbox" id="jo" '+(JO[P]?'checked':'')+' style="width:auto"> Jobs only slip (hide old balance, payments and balance due)</label>';
 L.forEach(function(j){h+='<details><summary><span><input type="checkbox" class="sk" data-id="'+j.id+'" '+(j.sl!==false?'checked':'')+' style="width:auto;margin-right:6px">'+sno(j)+' (Party #'+j.ps+') · '+fd(j.d)+(j.fo?' · 📁 '+esc(j.fo):'')+'</span><span>'+j.m+' sheets · Total ₹'+amt(j)+'</span></summary><div class="dl"><div><span>Job no.</span>'+sno(j)+'</div><div><span>Party job no.</span>#'+j.ps+'</div><div><span>Job date</span>'+fd(j.d)+'</div><div><span>Folder</span>'+(j.fo?esc(j.fo):"-")+'</div><div><span>PF name</span>'+(j.pfn?esc(j.pfn):"-")+'</div><div><span>Sheets ordered</span>'+j.o+'</div><div><span>Sheets made</span>'+j.m+'</div><div><span>Rate per sheet</span>₹'+j.r+'</div><div><span>Total</span>₹'+amt(j)+'</div><div><span>PF date</span>'+fd(j.pf)+'</div><div><span>Final date</span>'+fd(j.f)+'</div></div><div class="r"><button class="s" data-e="'+j.id+'">Edit</button><button class="d" data-x="'+j.id+'">Delete</button></div>'+
 '<div class="sp"><b>Send PF</b><div class="r" style="margin-top:8px"><input type="file" accept="application/pdf,.pdf" class="pff" data-id="'+j.id+'"></div><div class="psz" tabindex="0" data-id="'+j.id+'">Or click here and press Ctrl+V to paste a copied PDF</div><div class="mut" style="margin-top:6px">Selected: <span id="nm'+j.id+'">'+(FM[j.id]?esc(FM[j.id].name):"none")+'</span></div><div class="r"><button data-sp="'+j.id+'">Send on WhatsApp</button></div></div></details>'});
 if(!L.length)h+='<div class="mut">No jobs yet. Add the first job using the form above.</div>';
@@ -147,20 +142,20 @@ h+='<h1>Payment — '+esc(P)+'</h1><div class="c"><div class="g">'+fld("Date","a
 $("app").innerHTML=h;slip();
 }
 function sd(p){var f=S[p]||L[p]||"",r={f:f,pj:0,pp:0,L:[],X:[],tj:0,tm:0,to:0,tp:0};
-jb(p).forEach(function(j){if(f&&j.d&&j.d<f)r.pj+=amt(j);else if(j.sl!==false)r.L.push(j)});
+jb(p).forEach(function(j){if(!JO[p]&&f&&j.d&&j.d<f)r.pj+=amt(j);else if(j.sl!==false)r.L.push(j)});
 ad(p).forEach(function(x){if(f&&x.d&&x.d<f)r.pp+=x.a;else r.X.push(x)});
 r.L.reverse();r.X.reverse();r.prev=r.pj-r.pp+(+O[p]||0);
 r.L.forEach(function(j){r.tj+=amt(j);r.tm+=j.m;r.to+=j.o});r.X.forEach(function(x){r.tp+=x.a});
 r.due=r.prev+r.tj-r.tp;return r}
 function slip(){var d=sd(P);
-var h='<h1>Album Create</h1><div style="text-align:center" class="mut">Job Slip</div><div style="margin-top:12px"><b style="font-size:17px">Party: '+esc(P)+'</b><span class="mut" style="float:right">'+fd(today())+'</span>'+(M[P]?'<div class="mut">📞 '+esc(M[P])+'</div>':'')+(d.f?'<div class="mut">Jobs from '+fd(d.f)+'</div>':'')+'</div><table><tr><th>Job</th><th>Party job</th><th>Job date</th><th>Folder</th><th>PF name</th><th class="n">Ordered</th><th class="n">Made</th><th class="n">Rate</th><th class="n">Total</th><th>Final</th></tr>';
+var h='<h1>Album Create</h1><div style="text-align:center" class="mut">Job Slip</div><div style="margin-top:12px"><b style="font-size:17px">Party: '+esc(P)+'</b><span class="mut" style="float:right">'+fd(today())+'</span>'+(M[P]?'<div class="mut">📞 '+esc(M[P])+'</div>':'')+(d.f&&!JO[P]?'<div class="mut">Jobs from '+fd(d.f)+'</div>':'')+'</div><table><tr><th>Job</th><th>Party job</th><th>Job date</th><th>Folder</th><th>PF name</th><th class="n">Ordered</th><th class="n">Made</th><th class="n">Rate</th><th class="n">Total</th><th>Final</th></tr>';
 d.L.forEach(function(j,i){h+='<tr><td>'+sno(j)+'</td><td>#'+j.ps+'</td><td>'+fd(j.d)+'</td><td>'+esc(j.fo||"")+'</td><td>'+esc(j.pfn||"")+'</td><td class="n">'+j.o+'</td><td class="n">'+j.m+'</td><td class="n">₹'+j.r+'</td><td class="n">₹'+amt(j)+'</td><td>'+fd(j.f)+'</td></tr>'});
 h+='<tr><th colspan="5">Total ('+d.L.length+' jobs)</th><th class="n">'+d.to+'</th><th class="n">'+d.tm+'</th><th></th><th class="n">₹'+d.tj+'</th><th></th></tr></table>';
-if(d.X.length){h+='<table><tr><th>Payment date</th><th>Note</th><th class="n">Received</th></tr>';d.X.forEach(function(x){h+='<tr><td>'+fd(x.d)+'</td><td>'+esc(x.t||"")+'</td><td class="n">₹'+x.a+'</td></tr>'});h+='<tr><th colspan="2">Total received this time</th><th class="n">₹'+d.tp+'</th></tr></table>'}
-h+='<table><tr><th>Previous balance (old amount)</th><th class="n">₹'+d.prev+'</th></tr><tr><th>Jobs total (this slip)</th><th class="n">₹'+d.tj+'</th></tr><tr><th>Less payment received this time</th><th class="n">− ₹'+d.tp+'</th></tr><tr><th style="font-size:16px">Balance due</th><th class="n" style="font-size:16px">₹'+d.due+'</th></tr></table>';
+if(!JO[P]&&d.X.length){h+='<table><tr><th>Payment date</th><th>Note</th><th class="n">Received</th></tr>';d.X.forEach(function(x){h+='<tr><td>'+fd(x.d)+'</td><td>'+esc(x.t||"")+'</td><td class="n">₹'+x.a+'</td></tr>'});h+='<tr><th colspan="2">Total received this time</th><th class="n">₹'+d.tp+'</th></tr></table>'}
+if(JO[P]){h+='<table><tr><th style="font-size:16px">Total amount</th><th class="n" style="font-size:16px">₹'+d.tj+'</th></tr></table>'}else h+='<table><tr><th>Previous balance (old amount)</th><th class="n">₹'+d.prev+'</th></tr><tr><th>Jobs total (this slip)</th><th class="n">₹'+d.tj+'</th></tr><tr><th>Less payment received this time</th><th class="n">− ₹'+d.tp+'</th></tr><tr><th style="font-size:16px">Balance due</th><th class="n" style="font-size:16px">₹'+d.due+'</th></tr></table>';
 $("sl").innerHTML=h;
 }
-function delParty(n){J.filter(function(j){return j.p===n}).forEach(function(j){delete FM[j.id]});J=J.filter(function(x){return x.p!==n});A=A.filter(function(x){return x.p!==n});PL=PL.filter(function(x){return x!==n});delete F[n];delete M[n];delete S[n];delete O[n];delete L[n];delete PSN[n];sv()}
+function delParty(n){J.filter(function(j){return j.p===n}).forEach(function(j){delete FM[j.id]});J=J.filter(function(x){return x.p!==n});A=A.filter(function(x){return x.p!==n});PL=PL.filter(function(x){return x!==n});delete F[n];delete M[n];delete S[n];delete O[n];delete L[n];delete JO[n];delete PSN[n];sv()}
 function nd(){var d=new Date(today()+"T00:00:00Z");d.setUTCDate(d.getUTCDate()+1);return d.toISOString().slice(0,10)}
 function isNative(){return !!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform())}
 function b2b64(blob){return new Promise(function(r){var f=new FileReader();f.onload=function(){r(String(f.result).split(",")[1])};f.readAsDataURL(blob)})}
@@ -174,7 +169,7 @@ if(!window.html2canvas){alert("Download needs an internet connection the first t
 var fn="Slip-"+P.replace(/[^\w\- ]+/g,"").trim()+"-"+today()+".png";
 try{var c=await html2canvas($("pp"),{scale:2,backgroundColor:"#ffffff"});var b=await new Promise(function(r){c.toBlob(r,"image/png")});
 if(isNative()){await nativeShare(b,fn,"")}else if(dw){await dw.save({filename:fn,data:b})}else{var a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=fn;document.body.appendChild(a);a.click();a.remove()}
-L[P]=nd();S[P]="";sv();draw();toast("Slip saved. Next slip will start from "+fd(L[P]))}catch(e){if(!e||e.code!=="declined")alert("Could not save the slip image.")}}
+if(JO[P]){toast("Slip saved")}else{L[P]=nd();S[P]="";sv();draw();toast("Slip saved. Next slip will start from "+fd(L[P]))}}catch(e){if(!e||e.code!=="declined")alert("Could not save the slip image.")}}
 async function dlSlip(){
 var dw=null;try{dw=await claude.use("downloads")}catch(e){}
 if(!dw||!window.jspdf){alert("Download is not available here. Use Print Slip and choose Save as PDF.");return}
@@ -244,15 +239,16 @@ else if(id==="di")capture();
 else if(id==="cv")$("ov").style.display="none";
 else if(id==="sj"){saveJob();go("party")}
 else if(id==="sa"){var a=+$("aa").value;if(!a){alert("Enter the amount");return}A.push({id:Date.now(),p:P,d:$("ad").value,a:a,t:$("at").value.trim()});sv();go("party")}
-else if(id==="bk"){$("bx").innerHTML='<textarea id="bt" rows="6" style="width:100%" readonly>'+esc(JSON.stringify({j:J,p:PL,a:A,f:F,m:M,s:S,o:O,l:L}))+'</textarea><div class="note">Copy all this text and keep it safe.</div>';$("bt").select()}
+else if(id==="bk"){$("bx").innerHTML='<textarea id="bt" rows="6" style="width:100%" readonly>'+esc(JSON.stringify({j:J,p:PL,a:A,f:F,m:M,s:S,o:O,l:L,jo:JO}))+'</textarea><div class="note">Copy all this text and keep it safe.</div>';$("bt").select()}
 else if(id==="rs"){$("bx").innerHTML='<textarea id="bt" rows="6" style="width:100%" placeholder="Paste backup text here"></textarea><div class="r"><button id="rn">Restore now</button></div>'}
-else if(id==="rn"){var s=$("bt").value;if(s){try{var o=JSON.parse(s);if(Array.isArray(o)){J=o;PL=[]}else{J=o.j||[];PL=o.p||[];A=o.a||[];F=o.f||{};M=o.m||{};S=o.s||{};O=o.o||{};L=o.l||{}}J.forEach(function(j){if(PL.indexOf(j.p)<0)PL.push(j.p)});fixSN();sv();go("home")}catch(x){alert("Invalid backup")}}}
+else if(id==="rn"){var s=$("bt").value;if(s){try{var o=JSON.parse(s);if(Array.isArray(o)){J=o;PL=[]}else{J=o.j||[];PL=o.p||[];A=o.a||[];F=o.f||{};M=o.m||{};S=o.s||{};O=o.o||{};L=o.l||{};JO=o.jo||{}}J.forEach(function(j){if(PL.indexOf(j.p)<0)PL.push(j.p)});fixSN();sv();go("home")}catch(x){alert("Invalid backup")}}}
 else{var c=t.closest&&t.closest("[data-p]");if(c&&V==="home")go("party",c.getAttribute("data-p"))}
 });
 document.addEventListener("change",function(e){var t=e.target;
 if(t.classList&&t.classList.contains("pff"))setF(t.getAttribute("data-id"),t.files[0]);
 if(t.id==="fn"){F[P]=t.value.trim();sv()}
 if(t.id==="mn"){M[P]=t.value.trim();sv()}
+if(t.id==="jo"){JO[P]=t.checked;sv();slip()}
 if(t.id==="sf"){S[P]=(t.value===(L[P]||""))?"":t.value;sv()}
 if(t.classList&&t.classList.contains("sk")){var jj2=J.filter(function(x){return String(x.id)===t.getAttribute("data-id")})[0];if(jj2){jj2.sl=t.checked;sv();slip()}}});
 document.addEventListener("paste",function(e){var z=e.target.closest&&e.target.closest(".psz");if(!z)return;
