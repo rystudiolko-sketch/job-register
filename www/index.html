@@ -59,6 +59,9 @@ th,td{padding:6px;border-bottom:1px solid #999;text-align:left;font-size:13px}
 <div id="ov" class="np" style="display:none"><div class="bar"><button id="cv" class="s" style="background:#fff">✕ Close</button><button id="di">Download Slip</button><button id="pn" class="s" style="background:#fff">Print</button></div><div id="pp"></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
 var armed=null,SN=0,SNY={},PSN={},NP=null;
 function toast(m){var d=document.createElement("div");d.textContent=m;d.style.cssText="position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:8px;z-index:99;max-width:90%;font-size:14px";document.body.appendChild(d);setTimeout(function(){d.remove()},3500)}
@@ -66,12 +69,43 @@ window.alert=function(m){toast(m)};
 function conf(k,b){if(armed===k){armed=null;return true}armed=k;var o=b.textContent;b.textContent="Tap again to confirm";setTimeout(function(){if(armed===k){armed=null;b.textContent=o}},4000);return false}
 var K="albumJobs",KP="albumParties",KA="albumAdv",KF="albumFolders",KM="albumMobiles",KS="albumSlipFrom",KO="albumOld",KL="albumLastSlip",J=[],PL=[],A=[],F={},M={},S={},O={},L={},FM={},V="home",P="",E=null,Q="";
 function lo(k,d){try{return JSON.parse(localStorage.getItem(k)||d)}catch(e){return JSON.parse(d)}}
-function sv(){try{localStorage.setItem(K,JSON.stringify(J));localStorage.setItem(KP,JSON.stringify(PL));localStorage.setItem(KA,JSON.stringify(A));localStorage.setItem(KF,JSON.stringify(F));localStorage.setItem(KM,JSON.stringify(M));localStorage.setItem(KS,JSON.stringify(S));localStorage.setItem(KO,JSON.stringify(O));localStorage.setItem(KL,JSON.stringify(L));localStorage.setItem("albumSerialY",JSON.stringify(SNY));localStorage.setItem("albumPS",JSON.stringify(PSN))}catch(e){}}
+function saveLocal(){try{localStorage.setItem(K,JSON.stringify(J));localStorage.setItem(KP,JSON.stringify(PL));localStorage.setItem(KA,JSON.stringify(A));localStorage.setItem(KF,JSON.stringify(F));localStorage.setItem(KM,JSON.stringify(M));localStorage.setItem(KS,JSON.stringify(S));localStorage.setItem(KO,JSON.stringify(O));localStorage.setItem(KL,JSON.stringify(L));localStorage.setItem("albumSerialY",JSON.stringify(SNY));localStorage.setItem("albumPS",JSON.stringify(PSN))}catch(e){}}
+function sv(){try{localStorage.setItem("albumDirty","1")}catch(e){}saveLocal();cloudPush()}
 J=lo(K,"[]");PL=lo(KP,"[]");A=lo(KA,"[]");F=lo(KF,"{}");M=lo(KM,"{}");S=lo(KS,"{}");O=lo(KO,"{}");L=lo(KL,"{}");
 J.forEach(function(j){if(PL.indexOf(j.p)<0)PL.push(j.p)});
 function sno(j){return"#"+j.sn+"/"+String(j.yr||"").slice(2)}
 function fixSN(){J.forEach(function(j){if(j.fo===undefined)j.fo=F[j.p]||"";if(!j.yr)j.yr=(j.d||today()).slice(0,4)});try{var sy=localStorage.getItem("albumSerialY");if(sy){var st=JSON.parse(sy);for(var y in st)if(st[y]>(SNY[y]||0))SNY[y]=st[y]}else{var os=+(localStorage.getItem("albumSerial")||0),cy=today().slice(0,4);if(os>(SNY[cy]||0))SNY[cy]=os}}catch(e){}J.forEach(function(j){if(j.sn&&j.sn>(SNY[j.yr]||0))SNY[j.yr]=j.sn});J.filter(function(j){return!j.sn}).sort(function(a,b){return a.id-b.id}).forEach(function(j){SNY[j.yr]=(SNY[j.yr]||0)+1;j.sn=SNY[j.yr]});try{var pc=JSON.parse(localStorage.getItem("albumPS")||"{}");for(var q in pc)if(pc[q]>(PSN[q]||0))PSN[q]=pc[q]}catch(e){}J.forEach(function(j){if(j.ps&&j.ps>(PSN[j.p]||0))PSN[j.p]=j.ps});J.filter(function(j){return!j.ps}).sort(function(a,b){return a.id-b.id}).forEach(function(j){PSN[j.p]=(PSN[j.p]||0)+1;j.ps=PSN[j.p]})}
-fixSN();sv();
+fixSN();saveLocal();
+
+/* ===== CLOUD SYNC (Firebase) — paste your keys below ===== */
+var FB_CFG={
+  apiKey:"AIzaSyBa2ztWnr4yNOCfOKKY3922kCXeFRVTJo8",
+  authDomain:"job-register-95f74.firebaseapp.com",
+  projectId:"job-register-95f74",
+  appId:"1:896307445969:web:f7c4696db7b37d716085f0"
+};
+var CL={on:!!(FB_CFG.apiKey&&window.firebase),user:null,db:null,t:null,ts:0,applying:false,st:"Connecting…",unsub:null};
+function setStatus(m){CL.st=m;var e=document.getElementById("cst");if(e)e.textContent=m}
+function pack(){return JSON.stringify({j:J,p:PL,a:A,f:F,m:M,s:S,o:O,l:L,psn:PSN,sny:SNY})}
+function unpack(b){try{var o=JSON.parse(b);CL.applying=true;try{if(!localStorage.getItem("albumBeforeSync"))localStorage.setItem("albumBeforeSync",pack())}catch(e){}
+J=o.j||[];PL=o.p||[];A=o.a||[];F=o.f||{};M=o.m||{};S=o.s||{};O=o.o||{};L=o.l||{};PSN=o.psn||{};SNY=o.sny||{};
+J.forEach(function(j){if(PL.indexOf(j.p)<0)PL.push(j.p)});fixSN();saveLocal();CL.applying=false;
+var ae=document.activeElement;if(!(ae&&/INPUT|TEXTAREA/.test(ae.tagName)))draw()}catch(e){CL.applying=false}}
+function cloudRef(){return CL.db.collection("users").doc(CL.user.uid).collection("data").doc("main")}
+function cloudInit(){if(!CL.on)return;try{firebase.initializeApp(FB_CFG);CL.db=firebase.firestore();
+firebase.auth().onAuthStateChanged(function(u){CL.user=u;if(u)cloudStart();else if(CL.unsub){CL.unsub();CL.unsub=null}draw()})}catch(e){CL.on=false;CL.st="Firebase initialization failed";console.error("Firebase initialization failed:",e)}}
+function cloudStart(){var first=true;if(CL.unsub)CL.unsub();
+CL.unsub=cloudRef().onSnapshot(function(s){if(s.metadata.hasPendingWrites)return;
+var dirty=false;try{dirty=localStorage.getItem("albumDirty")==="1"}catch(e){}
+if(first&&dirty){first=false;cloudPush(true);return}
+if(s.exists){var d=s.data();if((d.ts||0)>CL.ts){CL.ts=d.ts;unpack(d.body)}}else if(first&&(J.length||PL.length)){first=false;cloudPush(true);return}
+first=false;setStatus("Synced")},function(){setStatus("Sync error")})}
+function cloudPush(){if(!CL||!CL.on||!CL.user||CL.applying)return;clearTimeout(CL.t);setStatus("Saving…");
+CL.t=setTimeout(function(){var ts=Date.now();CL.ts=ts;cloudRef().set({body:pack(),ts:ts}).then(function(){try{localStorage.removeItem("albumDirty")}catch(e){}setStatus("Synced")}).catch(function(){setStatus("Offline – will sync later")})},600)}
+function doAuth(create){var em=$("em").value.trim(),pw=$("pw").value;if(!em||!pw){alert("Enter email and password");return}
+var a=firebase.auth();(create?a.createUserWithEmailAndPassword(em,pw):a.signInWithEmailAndPassword(em,pw)).catch(function(e){alert(e.message)})}
+function cbar(){return CL.on&&CL.user?'<div class="mut" style="margin:-6px 0 10px">☁ <span id="cst">'+esc(CL.st)+'</span> · '+esc(CL.user.email)+' <button class="s" id="so2" style="padding:2px 8px">Sign out</button></div>':(CL.on?'':'<div class="mut" style="margin:-6px 0 10px">Cloud sync is off (data stays on this device)</div>')}
+function loginHtml(){return'<h1>📖 Job Register</h1><div class="c"><b>Sign in</b><div class="g" style="margin-top:8px">'+fld("Email","em","email","")+fld("Password","pw","password","")+'</div><div class="r"><button id="li">Sign in</button><button class="s" id="ca">Create account</button></div><div class="note">Use the same email and password on every phone and PC to see the same data.</div></div>'}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function fd(s){if(!s)return"-";var a=s.split("-");return a[2]+"/"+a[1]+"/"+a[0]}
 function amt(j){return j.m*j.r}
@@ -83,9 +117,10 @@ function go(v,p){V=v;if(p!==undefined)P=p;E=null;NP=null;draw();window.scrollTo(
 function fld(l,id,t,v,x){return'<div><label>'+l+'</label><input id="'+id+'" type="'+t+'" value="'+esc(v)+'" '+(x||"")+'></div>'}
 function $(i){return document.getElementById(i)}
 function draw(){
+if(CL.on&&!CL.user){$("app").innerHTML=loginHtml();$("sl").innerHTML="";return}
 var h="";
 if(V==="home"){
-h+='<h1>📖 Job Register</h1><div class="c"><div class="g">'+fld("New party name","np","text","",'placeholder="Party name"')+fld("Mobile number","nm","tel","",'placeholder="Mobile number"')+'</div><div class="r"><button id="ap">+ Add Party</button></div></div>';
+h+='<h1>📖 Job Register</h1>'+cbar()+'<div class="c"><div class="g">'+fld("New party name","np","text","",'placeholder="Party name"')+fld("Mobile number","nm","tel","",'placeholder="Mobile number"')+'</div><div class="r"><button id="ap">+ Add Party</button></div></div>';
 h+='<input id="q" placeholder="Search party…" value="'+esc(Q)+'"><div style="margin-top:12px">';
 var ns=PL.slice().sort().filter(function(n){return n.toLowerCase().indexOf(Q.toLowerCase())>-1});
 ns.forEach(function(n){var s=sum(n);h+='<div class="c pc" data-p="'+esc(n)+'"><div><b>'+esc(n)+'</b><div class="mut">'+(M[n]?'📞 '+esc(M[n])+' · ':'')+s.n+' jobs · '+s.m+' sheets made · Paid ₹'+s.v+'</div></div><div style="text-align:right"><b>₹'+s.b+'</b><div class="mut">Balance</div><button class="d" data-dpn="'+esc(n)+'" style="padding:3px 8px;margin-top:6px">Delete</button></div></div>'});
@@ -191,7 +226,7 @@ if(g("data-sp")){sendPF(g("data-sp"));return}
 if(g("data-xa")){if(conf("a"+g("data-xa"),t)){var q=+g("data-xa");A=A.filter(function(x){return x.id!==q});sv();draw()}return}
 if(g("data-x")){if(conf("j"+g("data-x"),t)){var d=+g("data-x");J=J.filter(function(x){return x.id!==d});delete FM[d];sv();draw()}return}
 if(g("data-e")){E=+g("data-e");NP=null;draw();window.scrollTo(0,0);return}
-if(id==="ap")addParty();
+if(id==="li"){doAuth(0)}else if(id==="ca"){doAuth(1)}else if(id==="so2"){firebase.auth().signOut()}else if(id==="ap")addParty();
 else if(id==="ef"){M[P]=$("mn").value.trim();S[P]=($("sf").value===(L[P]||""))?"":$("sf").value;sv();draw()}
 else if(id==="dp"){if(conf("dp",t)){delParty(P);go("home","")}}
 else if(id==="nj"){if(E){E=null;draw()}$("jf").scrollIntoView({behavior:"smooth"});var fe=$("o");if(fe)fe.focus()}
@@ -223,8 +258,8 @@ if(t.classList&&t.classList.contains("sk")){var jj2=J.filter(function(x){return 
 document.addEventListener("paste",function(e){var z=e.target.closest&&e.target.closest(".psz");if(!z)return;
 var fs=e.clipboardData&&e.clipboardData.files;if(fs&&fs.length){e.preventDefault();setF(z.getAttribute("data-id"),fs[0])}else alert("No file found in the clipboard. Copy a PDF file first.")});
 document.addEventListener("input",function(e){if(e.target.id==="q"){Q=e.target.value;var p=e.target.selectionStart;draw();var q=$("q");q.focus();q.setSelectionRange(p,p)}});
-document.addEventListener("keydown",function(e){if(e.key==="Enter"&&(e.target.id==="np"||e.target.id==="nm"))addParty()});
-draw();
+document.addEventListener("keydown",function(e){if(e.key==="Enter"&&(e.target.id==="np"||e.target.id==="nm"))addParty();if(e.key==="Enter"&&e.target.id==="pw")doAuth(0)});
+cloudInit();draw();
 </script>
 </body>
 </html>
