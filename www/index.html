@@ -79,6 +79,7 @@ fixSN();saveLocal();
 
 /* ===== CLOUD SYNC (Firebase) — paste your keys below ===== */
 var FB_CFG={apiKey:"",authDomain:"",projectId:"",appId:""};
+try{if(!FB_CFG.apiKey){var _c=JSON.parse(localStorage.getItem("fbCfg")||"null");if(_c&&_c.apiKey)FB_CFG=_c}}catch(e){}
 var CL={on:!!(FB_CFG.apiKey&&window.firebase),user:null,db:null,t:null,ts:0,id:Math.random().toString(36).slice(2)+Date.now(),applying:false,st:"Connecting…",unsub:null};
 function setStatus(m){CL.st=m;var e=document.getElementById("cst");if(e)e.textContent=m}
 function pack(){return JSON.stringify({j:J,p:PL,a:A,f:F,m:M,s:S,o:O,l:L,jo:JO,psn:PSN,sny:SNY})}
@@ -99,7 +100,8 @@ function cloudPush(){if(!CL||!CL.on||!CL.user||CL.applying)return;clearTimeout(C
 CL.t=setTimeout(function(){var ts=Date.now();CL.ts=ts;cloudRef().set({body:pack(),ts:ts,by:CL.id}).then(function(){try{localStorage.removeItem("albumDirty")}catch(e){}setStatus("Synced")}).catch(function(){setStatus("Offline – will sync later")})},600)}
 function doAuth(create){var em=$("em").value.trim(),pw=$("pw").value;if(!em||!pw){alert("Enter email and password");return}
 var a=firebase.auth();(create?a.createUserWithEmailAndPassword(em,pw):a.signInWithEmailAndPassword(em,pw)).catch(function(e){alert(e.message)})}
-function cbar(){return CL.on&&CL.user?'<div class="mut" style="margin:-6px 0 10px">☁ <span id="cst">'+esc(CL.st)+'</span> · '+esc(CL.user.email)+' <button class="s" id="so2" style="padding:2px 8px">Sign out</button></div>':(CL.on?'':'<div class="mut" style="margin:-6px 0 10px">Cloud sync is off (data stays on this device)</div>')}
+function cbar(){return CL.on&&CL.user?'<div class="mut" style="margin:-6px 0 10px">☁ <span id="cst">'+esc(CL.st)+'</span> · '+esc(CL.user.email)+' <button class="s" id="so2" style="padding:2px 8px">Sign out</button></div>':(CL.on?'':'<div class="mut" style="margin:-6px 0 10px">Cloud sync is off (data stays on this device) <button class="s" id="cfg" style="padding:2px 8px">Set up cloud sync</button></div>')}
+function cfgHtml(){return'<h1>Cloud setup</h1><div class="c"><div class="note">Open Firebase → Project settings → Your apps → Config. Copy the firebaseConfig block and paste it here once.</div><textarea id="cfgt" rows="8" style="width:100%;margin-top:8px;padding:9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--tx)"></textarea><div class="r"><button id="cfgs">Save &amp; start</button><button class="s" id="cfgx">Cancel</button></div></div>'}
 function loginHtml(){return'<h1>📖 Job Register</h1><div class="c"><b>Sign in</b><div class="g" style="margin-top:8px">'+fld("Email","em","email","")+fld("Password","pw","password","")+'</div><div class="r"><button id="li">Sign in</button><button class="s" id="ca">Create account</button></div><div class="note">Use the same email and password on every phone and PC to see the same data.</div></div>'}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 function fd(s){if(!s)return"-";var a=s.split("-");return a[2]+"/"+a[1]+"/"+a[0]}
@@ -114,7 +116,7 @@ function $(i){return document.getElementById(i)}
 function draw(){
 if(CL.on&&!CL.user){$("app").innerHTML=loginHtml();$("sl").innerHTML="";return}
 var h="";
-if(V==="home"){
+if(V==="cfg"){h+=cfgHtml()}else if(V==="home"){
 h+='<h1>📖 Job Register</h1>'+cbar()+'<div class="c"><div class="g">'+fld("New party name","np","text","",'placeholder="Party name"')+fld("Mobile number","nm","tel","",'placeholder="Mobile number"')+'</div><div class="r"><button id="ap">+ Add Party</button></div></div>';
 h+='<input id="q" placeholder="Search party…" value="'+esc(Q)+'"><div style="margin-top:12px">';
 var ns=PL.slice().sort().filter(function(n){return n.toLowerCase().indexOf(Q.toLowerCase())>-1});
@@ -221,7 +223,7 @@ if(g("data-sp")){sendPF(g("data-sp"));return}
 if(g("data-xa")){if(conf("a"+g("data-xa"),t)){var q=+g("data-xa");A=A.filter(function(x){return x.id!==q});sv();draw()}return}
 if(g("data-x")){if(conf("j"+g("data-x"),t)){var d=+g("data-x");J=J.filter(function(x){return x.id!==d});delete FM[d];sv();draw()}return}
 if(g("data-e")){E=+g("data-e");NP=null;draw();window.scrollTo(0,0);return}
-if(id==="li"){doAuth(0)}else if(id==="ca"){doAuth(1)}else if(id==="so2"){firebase.auth().signOut()}else if(id==="ap")addParty();
+if(id==="cfg"){V="cfg";draw()}else if(id==="cfgx"){go("home")}else if(id==="cfgs"){var tx=$("cfgt").value;function gk(k){var m=tx.match(new RegExp(k+"\\s*[:=]\\s*[\"']([^\"']+)[\"']"));return m?m[1]:""}var cc={apiKey:gk("apiKey"),authDomain:gk("authDomain"),projectId:gk("projectId"),appId:gk("appId")};if(!cc.apiKey||!cc.projectId){alert("Could not read the config. Paste the whole firebaseConfig block.");return}try{localStorage.setItem("fbCfg",JSON.stringify(cc))}catch(e){}location.reload()}else if(id==="li"){doAuth(0)}else if(id==="ca"){doAuth(1)}else if(id==="so2"){firebase.auth().signOut()}else if(id==="ap")addParty();
 else if(id==="ef"){M[P]=$("mn").value.trim();S[P]=($("sf").value===(L[P]||""))?"":$("sf").value;sv();draw()}
 else if(id==="dp"){if(conf("dp",t)){delParty(P);go("home","")}}
 else if(id==="nj"){if(E){E=null;draw()}$("jf").scrollIntoView({behavior:"smooth"});var fe=$("o");if(fe)fe.focus()}
